@@ -1,0 +1,19 @@
+# API Framework
+fastapi
+uvicorn
+
+# Document Processing
+pymupdf
+
+# AI & LLM Models
+sentence-transformers
+transformers
+torch
+
+# Vector Database
+chromadb
+
+
+
+
+
