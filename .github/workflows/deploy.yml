@@ -15,7 +15,7 @@ jobs:
 
       - name: Set Up SSH Access
         run: |
-          echo "${{ secrets.AWS_PRIVATE_KEY }}" > private_key.pem
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" | tr -d '\r' > private_key.pem
           chmod 600 private_key.pem
 
       - name: Deploy to AWS EC2
