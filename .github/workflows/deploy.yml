@@ -1,0 +1,51 @@
+name: Deploy Backend to AWS EC2 (Without Docker)
+
+on:
+  push:
+    branches:
+      - main  # Runs when code is pushed to 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set Up SSH Access
+        run: |
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_IP }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu
+
+            # Check if project exists, otherwise clone it
+            if [ ! -d "personal-knowledge-chatbot" ]; then
+              git clone https://github.com/TrishKedi/personal-knowledge-chatbot
+            fi
+
+            cd personal-knowledge-chatbot/backend
+
+            # Pull latest changes
+            git reset --hard
+            git pull origin main
+
+            # Set up virtual environment
+            python3 -m venv venv
+            source venv/bin/activate
+
+            # Install dependencies
+            pip install --upgrade pip
+            pip install -r requirements.txt
+
+            # Restart FastAPI application
+            pkill -f "uvicorn" || true
+            nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
