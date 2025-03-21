@@ -1,52 +1,54 @@
 import { useState } from "react";
 import axios from "axios";
+import { useChatMutation } from "../api/api"
+import { Container, Typography, TextField, Button, CircularProgress} from "@mui/material"
+
 
 const Chat = () => {
     const [query, setQuery] = useState("")
     const [response, setResponse] = useState("")
+    const chatMutation = useChatMutation();
 
     const handleChat = async () => {
         if (!query) return
-        try{
-            console.log(query)
-            const res = await axios.post(
-                'http://localhost:8000/api/chat',  
-                { userquery: query },
-                { headers: { "Content-Type": "application/json" } }
-            )
-            setResponse(res.data.response)
-        }
-        catch(error){
-            console.log(error)
-        }
+        chatMutation.mutate(query)
+    
     }
 
     return (
         <div style={{ padding: "20px", textAlign: "center" }}>
-            <input 
-                value={query}
-                placeholder="Ask a question"
-                type="text"
-                onChange={(e) => setQuery(e.target.value)}
-                style={{
-                    padding: "10px",
-                    border: "1px solid gray",
-                    width: "60%",
-                  }}
-            />
-            <button
-                onClick={handleChat}
-                style={{
-                    backgroundColor: "green",
-                    color: "white",
-                    padding: "10px 20px",
-                    border: "none",
-                    cursor: "pointer",
-                    marginLeft: "10px",
-                  }}
-            >
-            </button>
-            { response && <p style={{ marginTop: "20px", fontWeight: "bold" }}>Response: {response}</p>}
+            <Container maxWidth="sm" sx={{ mt: 4}}>
+                <Typography variant="h4"> AI Knowledge bot</Typography>
+                <TextField
+                    fullWidth
+                    label='Ask a question'
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    variant="outlined"
+                    sx={{ mb: 4}}
+                />
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleChat}
+                    disabled={chatMutation.status == 'pending'}
+                >
+                    { chatMutation.status == 'pending' ? ( <CircularProgress size={24}/> ) : 'Ask'}
+
+                </Button>
+
+                {chatMutation.isSuccess && (
+                    <Typography variant="h6" sx={{ mt: 2 }}>
+                        {chatMutation.data.response}
+                    </Typography>
+                )}
+                {chatMutation.isError && (
+                    <Typography color="error" sx={{ mt: 2 }}>
+                        {chatMutation.error.message}
+                    </Typography>
+                )}
+            </Container>
+   
         </div>
     )
 
